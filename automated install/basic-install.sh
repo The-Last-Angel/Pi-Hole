@@ -2026,6 +2026,9 @@ accountForRefactor() {
         fi
         echo -e "INSTALL_WEB_SERVER=$webserver_installed" >> "${setupVars}"
     fi
+
+    # Move any existing `pihole*` logs from `/var/log` to `/var/log/pihole`
+    mv /var/log/pihole*.* /var/log/pihole/
 }
 
 # Install base files and web interface
