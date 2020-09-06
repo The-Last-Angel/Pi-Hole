@@ -2028,7 +2028,7 @@ accountForRefactor() {
     fi
 
     # Move any existing `pihole*` logs from `/var/log` to `/var/log/pihole`
-    mv /var/log/pihole*.* /var/log/pihole/
+    mv /var/log/pihole*.* /var/log/pihole/ 2>/dev/null
 }
 
 # Install base files and web interface
