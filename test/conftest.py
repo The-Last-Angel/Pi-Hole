@@ -48,7 +48,7 @@ def Docker(request, args, image, cmd):
     combine our fixtures into a docker run command and setup finalizer to
     cleanup
     '''
-    assert 'docker' in check_output('id'), "Are you in the docker group?"
+    assert 'circleci' in check_output('id'), "Are you in the docker group?"
     docker_run = "docker run {} {} {}".format(args, image, cmd)
     docker_id = check_output(docker_run)
 

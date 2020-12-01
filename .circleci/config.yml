@@ -8,17 +8,66 @@ version: 2.1
         version: 19.03.13
     - checkout
     - run: pip install -r test/requirements.txt
-    - run: docker build -f test/_${DISTRO}.Dockerfile -t pytest_pihole:test_container ../
-    - run: pytest -n auto test/test_automated_install.py
+    - run: docker build -f test/_${DISTRO}.Dockerfile -t pytest_pihole:test_container .
+    - run: pytest -vv -n auto ${TESTS}
 
 jobs:
   debian_9:
     <<: *distro-test
     environment:
       DISTRO: "debian_9"
+      TESTS: "test/test_automated_install.py"
+  debian_10:
+    <<: *distro-test
+    environment:
+      DISTRO: "debian_10"
+      TESTS: "test/test_automated_install.py"
+  ubuntu_16:
+    <<: *distro-test
+    environment:
+      DISTRO: "ubuntu_16"
+      TESTS: "test/test_automated_install.py"
+  ubuntu_18:
+    <<: *distro-test
+    environment:
+      DISTRO: "ubuntu_18"
+      TESTS: "test/test_automated_install.py"
+  ubuntu_20:
+    <<: *distro-test
+    environment:
+      DISTRO: "ubuntu_20"
+      TESTS: "test/test_automated_install.py"
+  centos_7:
+    <<: *distro-test
+    environment:
+      DISTRO: "centos_7"
+      TESTS: "test/test_automated_install.py test/test_centos_fedora_common_support.py test/test_centos_common_support.py test/test_centos_7_support.py"
+  centos_8:
+    <<: *distro-test
+    environment:
+      DISTRO: "centos_8"
+      TESTS: "test/test_automated_install.py test/test_centos_fedora_common_support.py test/test_centos_common_support.py test/test_centos_8_support.py"
+  fedora_31:
+    <<: *distro-test
+    environment:
+      DISTRO: "fedora_31"
+      TESTS: "test/test_automated_install.py test/test_centos_fedora_common_support.py test/test_fedora_support.py"
+  fedora_32:
+    <<: *distro-test
+    environment:
+      DISTRO: "fedora_32"
+      TESTS: "test/test_automated_install.py test/test_centos_fedora_common_support.py test/test_fedora_support.py"
 
 workflows:
   version: 2.1
   build:
     jobs:
       - debian_9
+      - debian_10
+      - ubuntu_16
+      - ubuntu_18
+      - ubuntu_20
+      - centos_7
+      - centos_8
+      - fedora_31
+      - fedora_32
