@@ -8,7 +8,8 @@ version: 2.1
         version: 19.03.13
     - checkout
     - run: pip install -r test/requirements.txt
-    - run: tox -c test/tox.${DISTRO}.ini 
+    - run: docker build -f test/_${DISTRO}.Dockerfile -t pytest_pihole:test_container ../
+    - run: pytest -n auto test/test_automated_install.py
 
 jobs:
   debian_9:
