@@ -6,7 +6,6 @@ version: 2.1
   steps:
     - setup_remote_docker:
         version: 19.03.13
-        docker_layer_caching: true
     - checkout
     - run: pip install -r requirements.txt
     - run: tox -c test/tox.${DISTRO}.ini 
