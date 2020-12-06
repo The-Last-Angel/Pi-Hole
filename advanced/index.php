@@ -50,12 +50,12 @@ if ($serverName === "pi.hole"
         <head>
             <meta charset='utf-8'>
             $viewPort
-            <title>● $serverName</title>            
+            <title>● $serverName</title>
             <link rel='shortcut icon' href='admin/img/favicons/favicon.ico' type='image/x-icon'>
             <style>
               #splashpage { background: #222; color: rgba(255, 255, 255, 0.7); text-align: center; }
               #splashpage img { margin: 5px; width: 256px; }
-              #splashpage b { color: inherit; }              
+              #splashpage b { color: inherit; }
             </style>
         </head>
         <body id='splashpage'>
@@ -69,6 +69,6 @@ if ($serverName === "pi.hole"
     exit($splashPage);
 }
 
-header("HTTP/1.1 404 Not Found");
+exit(header("HTTP/1.1 404 Not Found"));
 
 ?>
