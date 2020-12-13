@@ -25,9 +25,6 @@ if (!empty($_SERVER["FQDN"])) {
     array_push($authorizedHosts, $_SERVER["VIRTUAL_HOST"]);
 }
 
-// Set mobile friendly viewport
-$viewPort = '<meta name="viewport" content="width=device-width, initial-scale=1">';
-
 // Determine block page type
 if ($serverName === "pi.hole"
     || (!empty($_SERVER["VIRTUAL_HOST"]) && $serverName === $_SERVER["VIRTUAL_HOST"])) {
@@ -49,7 +46,7 @@ if ($serverName === "pi.hole"
     <html lang='en'>
         <head>
             <meta charset='utf-8'>
-            $viewPort
+            <meta name='viewport' content='width=device-width, initial-scale=1'>
             <title>● $serverName</title>
             <link rel='shortcut icon' href='admin/img/favicons/favicon.ico' type='image/x-icon'>
             <style>
