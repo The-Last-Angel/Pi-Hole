@@ -115,13 +115,11 @@ c=$(( c < 70 ? 70 : c ))
 # The runUnattended flag is one example of this
 reconfigure=false
 runUnattended=false
-INSTALL_WEB_SERVER=true
 # Check arguments for the undocumented flags
 for var in "$@"; do
     case "$var" in
         "--reconfigure" ) reconfigure=true;;
         "--unattended" ) runUnattended=true;;
-        "--disable-install-webserver" ) INSTALL_WEB_SERVER=false;;
     esac
 done
 
@@ -319,6 +317,7 @@ if is_command apt-get ; then
     INSTALLER_DEPS=(dhcpcd5 git "${iproute_pkg}" whiptail dnsutils)
     # Pi-hole itself has several dependencies that also need to be installed
     PIHOLE_DEPS=(cron curl iputils-ping lsof netcat psmisc sudo unzip wget idn2 sqlite3 libcap2-bin dns-root-data libcap2)
+
 
     # # The Web server user,
     # LIGHTTPD_USER="www-data"
@@ -1163,35 +1162,8 @@ setAdminFlag() {
             printf "  %b Web Interface Off\\n" "${INFO}"
             # or false
             INSTALL_WEB_INTERFACE=false
-            # Deselect the web server as well, since it is obsolete then
-            INSTALL_WEB_SERVER=false
             ;;
     esac
-
-    # Request user to install web server, if it has not been deselected before (INSTALL_WEB_SERVER=true is default).
-    if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
-        # Get list of required PHP modules, excluding base package (common) and handler (cgi)
-        local i php_modules
-        for i in "${PIHOLE_WEB_DEPS[@]}"; do [[ $i == 'php'* && $i != *'-common' && $i != *'-cgi' ]] && php_modules+=" ${i#*-}"; done
-        WebToggleCommand=(whiptail --separate-output --radiolist "Do you wish to install the web server (lighttpd) and required PHP modules?\\n\\nNB: If you disable this, and, do not have an existing web server and required PHP modules (${php_modules# }) installed, the web interface will not function. Additionally the web server user needs to be member of the \"pihole\" group for full functionality." "${r}" "${c}" 6)
-        # Enable as default and recommended option
-        WebChooseOptions=("On (Recommended)" "" on
-            Off "" off)
-        WebChoices=$("${WebToggleCommand[@]}" "${WebChooseOptions[@]}" 2>&1 >/dev/tty) || (printf "  %bCancel was selected, exiting installer%b\\n" "${COL_LIGHT_RED}" "${COL_NC}" && exit 1)
-        # Depending on their choice
-        case ${WebChoices} in
-            "On (Recommended)")
-                printf "  %b Web Server On\\n" "${INFO}"
-                # set it to true, as clearly seen below.
-                INSTALL_WEB_SERVER=true
-                ;;
-            Off)
-                printf "  %b Web Server Off\\n" "${INFO}"
-                # or false
-                INSTALL_WEB_SERVER=false
-                ;;
-        esac
-    fi
 }
 
 # A function to display a list of example blocklists for users to select
@@ -1401,34 +1373,34 @@ installConfigs() {
         fi
     fi
 
-    # If the user chose to install the dashboard,
-    if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
-        # and if the Web server conf directory does not exist,
-        if [[ ! -d "/etc/lighttpd" ]]; then
-            # make it and set the owners
-            install -d -m 755 -o "${USER}" -g root /etc/lighttpd
-        # Otherwise, if the config file already exists
-        elif [[ -f "/etc/lighttpd/lighttpd.conf" ]]; then
-            # back up the original
-            mv /etc/lighttpd/lighttpd.conf /etc/lighttpd/lighttpd.conf.orig
-        fi
-        # and copy in the config file Pi-hole needs
-        install -D -m 644 -T ${PI_HOLE_LOCAL_REPO}/advanced/${LIGHTTPD_CFG} /etc/lighttpd/lighttpd.conf
-        # Make sure the external.conf file exists, as lighttpd v1.4.50 crashes without it
-        touch /etc/lighttpd/external.conf
-        chmod 644 /etc/lighttpd/external.conf
-        # if there is a custom block page in the html/pihole directory, replace 404 handler in lighttpd config
-        if [[ -f "${PI_HOLE_BLOCKPAGE_DIR}/custom.php" ]]; then
-            sed -i 's/^\(server\.error-handler-404\s*=\s*\).*$/\1"pihole\/custom\.php"/' /etc/lighttpd/lighttpd.conf
-        fi
-        # Make the directories if they do not exist and set the owners
-        mkdir -p /run/lighttpd
-        chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} /run/lighttpd
-        mkdir -p /var/cache/lighttpd/compress
-        chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} /var/cache/lighttpd/compress
-        mkdir -p /var/cache/lighttpd/uploads
-        chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} /var/cache/lighttpd/uploads
-    fi
+    # # If the user chose to install the dashboard,
+    # if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
+    #     # and if the Web server conf directory does not exist,
+    #     if [[ ! -d "/etc/lighttpd" ]]; then
+    #         # make it and set the owners
+    #         install -d -m 755 -o "${USER}" -g root /etc/lighttpd
+    #     # Otherwise, if the config file already exists
+    #     elif [[ -f "/etc/lighttpd/lighttpd.conf" ]]; then
+    #         # back up the original
+    #         mv /etc/lighttpd/lighttpd.conf /etc/lighttpd/lighttpd.conf.orig
+    #     fi
+    #     # and copy in the config file Pi-hole needs
+    #     install -D -m 644 -T ${PI_HOLE_LOCAL_REPO}/advanced/${LIGHTTPD_CFG} /etc/lighttpd/lighttpd.conf
+    #     # Make sure the external.conf file exists, as lighttpd v1.4.50 crashes without it
+    #     touch /etc/lighttpd/external.conf
+    #     chmod 644 /etc/lighttpd/external.conf
+    #     # if there is a custom block page in the html/pihole directory, replace 404 handler in lighttpd config
+    #     if [[ -f "${PI_HOLE_BLOCKPAGE_DIR}/custom.php" ]]; then
+    #         sed -i 's/^\(server\.error-handler-404\s*=\s*\).*$/\1"pihole\/custom\.php"/' /etc/lighttpd/lighttpd.conf
+    #     fi
+    #     # Make the directories if they do not exist and set the owners
+    #     mkdir -p /run/lighttpd
+    #     chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} /run/lighttpd
+    #     mkdir -p /var/cache/lighttpd/compress
+    #     chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} /var/cache/lighttpd/compress
+    #     mkdir -p /var/cache/lighttpd/uploads
+    #     chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} /var/cache/lighttpd/uploads
+    # fi
 }
 
 install_manpage() {
@@ -1684,35 +1656,35 @@ install_dependent_packages() {
 
 # Install the Web interface dashboard
 installPiholeWeb() {
-    printf "\\n  %b Installing blocking page...\\n" "${INFO}"
+    # printf "\\n  %b Installing blocking page...\\n" "${INFO}"
 
-    local str="Creating directory for blocking page, and copying files"
-    printf "  %b %s..." "${INFO}" "${str}"
-    # Install the directory
-    install -d -m 0755 ${PI_HOLE_BLOCKPAGE_DIR}
-    # and the blockpage
-    install -D -m 644 ${PI_HOLE_LOCAL_REPO}/advanced/{index,blockingpage}.* ${PI_HOLE_BLOCKPAGE_DIR}/
+    # local str="Creating directory for blocking page, and copying files"
+    # printf "  %b %s..." "${INFO}" "${str}"
+    # # Install the directory
+    # install -d -m 0755 ${PI_HOLE_BLOCKPAGE_DIR}
+    # # and the blockpage
+    # install -D -m 644 ${PI_HOLE_LOCAL_REPO}/advanced/{index,blockingpage}.* ${PI_HOLE_BLOCKPAGE_DIR}/
 
-    # Remove superseded file
-    if [[ -e "${PI_HOLE_BLOCKPAGE_DIR}/index.js" ]]; then
-        rm "${PI_HOLE_BLOCKPAGE_DIR}/index.js"
-    fi
+    # # Remove superseded file
+    # if [[ -e "${PI_HOLE_BLOCKPAGE_DIR}/index.js" ]]; then
+    #     rm "${PI_HOLE_BLOCKPAGE_DIR}/index.js"
+    # fi
 
-    printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
+    # printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
 
-    local str="Backing up index.lighttpd.html"
-    printf "  %b %s..." "${INFO}" "${str}"
-    # If the default index file exists,
-    if [[ -f "${webroot}/index.lighttpd.html" ]]; then
-        # back it up
-        mv ${webroot}/index.lighttpd.html ${webroot}/index.lighttpd.orig
-        printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
-    # Otherwise,
-    else
-        # don't do anything
-        printf "%b  %b %s\\n" "${OVER}" "${INFO}" "${str}"
-        printf "      No default index.lighttpd.html file found... not backing up\\n"
-    fi
+    # local str="Backing up index.lighttpd.html"
+    # printf "  %b %s..." "${INFO}" "${str}"
+    # # If the default index file exists,
+    # if [[ -f "${webroot}/index.lighttpd.html" ]]; then
+    #     # back it up
+    #     mv ${webroot}/index.lighttpd.html ${webroot}/index.lighttpd.orig
+    #     printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
+    # # Otherwise,
+    # else
+    #     # don't do anything
+    #     printf "%b  %b %s\\n" "${OVER}" "${INFO}" "${str}"
+    #     printf "      No default index.lighttpd.html file found... not backing up\\n"
+    # fi
 
     # Install Sudoers file
     local str="Installing sudoer file"
@@ -1812,35 +1784,36 @@ create_pihole_user() {
 
 #
 finalExports() {
-    # If the Web interface is not set to be installed,
-    if [[ "${INSTALL_WEB_INTERFACE}" == false ]]; then
-        # and if there is not an IPv4 address,
-        if [[ "${IPV4_ADDRESS}" ]]; then
-            # there is no block page, so set IPv4 to 0.0.0.0 (all IP addresses)
-            IPV4_ADDRESS="0.0.0.0"
-        fi
-        if [[ "${IPV6_ADDRESS}" ]]; then
-            # and IPv6 to ::/0
-            IPV6_ADDRESS="::/0"
-        fi
-    fi
+
+    #TODO: The following is only for lighttpd when block page is installed.. we have discussed determining this within FTL
+    #TODO: talk to @DL6ER
+
+    # # If the Web interface is not set to be installed,
+    # if [[ "${INSTALL_WEB_INTERFACE}" == false ]]; then
+    #     # and if there is not an IPv4 address,
+    #     if [[ "${IPV4_ADDRESS}" ]]; then
+    #         # there is no block page, so set IPv4 to 0.0.0.0 (all IP addresses)
+    #         IPV4_ADDRESS="0.0.0.0"
+    #     fi
+    #     if [[ "${IPV6_ADDRESS}" ]]; then
+    #         # and IPv6 to ::/0
+    #         IPV6_ADDRESS="::/0"
+    #     fi
+    # fi
 
     # If the setup variable file exists,
     if [[ -e "${setupVars}" ]]; then
         # update the variables in the file
-        sed -i.update.bak '/PIHOLE_INTERFACE/d;/IPV4_ADDRESS/d;/IPV6_ADDRESS/d;/PIHOLE_DNS_1\b/d;/PIHOLE_DNS_2\b/d;/QUERY_LOGGING/d;/INSTALL_WEB_SERVER/d;/INSTALL_WEB_INTERFACE/d;/LIGHTTPD_ENABLED/d;/CACHE_SIZE/d;' "${setupVars}"
+        #sed -i.update.bak '/PIHOLE_INTERFACE/d;/IPV4_ADDRESS/d;/IPV6_ADDRESS/d;/PIHOLE_DNS_1\b/d;/PIHOLE_DNS_2\b/d;/QUERY_LOGGING/d;/INSTALL_WEB_INTERFACE/d;/CACHE_SIZE/d;' "${setupVars}"
+        sed -i.update.bak '/PIHOLE_INTERFACE/d;/PIHOLE_DNS_1\b/d;/PIHOLE_DNS_2\b/d;/QUERY_LOGGING/d;/INSTALL_WEB_INTERFACE/d;/CACHE_SIZE/d;' "${setupVars}"
     fi
     # echo the information to the user
     {
     echo "PIHOLE_INTERFACE=${PIHOLE_INTERFACE}"
-    echo "IPV4_ADDRESS=${IPV4_ADDRESS}"
-    echo "IPV6_ADDRESS=${IPV6_ADDRESS}"
     echo "PIHOLE_DNS_1=${PIHOLE_DNS_1}"
     echo "PIHOLE_DNS_2=${PIHOLE_DNS_2}"
     echo "QUERY_LOGGING=${QUERY_LOGGING}"
-    echo "INSTALL_WEB_SERVER=${INSTALL_WEB_SERVER}"
     echo "INSTALL_WEB_INTERFACE=${INSTALL_WEB_INTERFACE}"
-    echo "LIGHTTPD_ENABLED=${LIGHTTPD_ENABLED}"
     echo "CACHE_SIZE=${CACHE_SIZE}"
     }>> "${setupVars}"
     chmod 644 "${setupVars}"
@@ -1893,14 +1866,15 @@ accountForRefactor() {
     sed -i 's/piholeDNS1/PIHOLE_DNS_1/g' "${setupVars}"
     sed -i 's/piholeDNS2/PIHOLE_DNS_2/g' "${setupVars}"
     sed -i 's/^INSTALL_WEB=/INSTALL_WEB_INTERFACE=/' "${setupVars}"
-    # Add 'INSTALL_WEB_SERVER', if its not been applied already: https://github.com/pi-hole/pi-hole/pull/2115
-    if ! grep -q '^INSTALL_WEB_SERVER=' ${setupVars}; then
-        local webserver_installed=false
-        if grep -q '^INSTALL_WEB_INTERFACE=true' ${setupVars}; then
-            webserver_installed=true
-        fi
-        echo -e "INSTALL_WEB_SERVER=$webserver_installed" >> "${setupVars}"
-    fi
+    # # Add 'INSTALL_WEB_SERVER', if its not been applied already: https://github.com/pi-hole/pi-hole/pull/2115
+    # if ! grep -q '^INSTALL_WEB_SERVER=' ${setupVars}; then
+    #     local webserver_installed=false
+    #     if grep -q '^INSTALL_WEB_INTERFACE=true' ${setupVars}; then
+    #         webserver_installed=true
+    #     fi
+    #     echo -e "INSTALL_WEB_SERVER=$webserver_installed" >> "${setupVars}"
+    # fi
+    #TODO: Use this to tidy things up?
 }
 
 # Install base files and web interface
@@ -1912,26 +1886,26 @@ installPihole() {
             install -d -m 0755 ${webroot}
         fi
 
-        if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
-            # Set the owner and permissions
-            chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} ${webroot}
-            chmod 0775 ${webroot}
-            # Repair permissions if webroot is not world readable
-            chmod a+rx /var/www
-            chmod a+rx ${webroot}
-            # Give lighttpd access to the pihole group so the web interface can
-            # manage the gravity.db database
-            usermod -a -G pihole ${LIGHTTPD_USER}
-            # If the lighttpd command is executable,
-            if is_command lighty-enable-mod ; then
-                # enable fastcgi and fastcgi-php
-                lighty-enable-mod fastcgi fastcgi-php > /dev/null || true
-            else
-                # Otherwise, show info about installing them
-                printf "  %b Warning: 'lighty-enable-mod' utility not found\\n" "${INFO}"
-                printf "      Please ensure fastcgi is enabled if you experience issues\\n"
-            fi
-        fi
+        # if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
+        #     # Set the owner and permissions
+        #     chown ${LIGHTTPD_USER}:${LIGHTTPD_GROUP} ${webroot}
+        #     chmod 0775 ${webroot}
+        #     # Repair permissions if webroot is not world readable
+        #     chmod a+rx /var/www
+        #     chmod a+rx ${webroot}
+        #     # Give lighttpd access to the pihole group so the web interface can
+        #     # manage the gravity.db database
+        #     usermod -a -G pihole ${LIGHTTPD_USER}
+        #     # If the lighttpd command is executable,
+        #     if is_command lighty-enable-mod ; then
+        #         # enable fastcgi and fastcgi-php
+        #         lighty-enable-mod fastcgi fastcgi-php > /dev/null || true
+        #     else
+        #         # Otherwise, show info about installing them
+        #         printf "  %b Warning: 'lighty-enable-mod' utility not found\\n" "${INFO}"
+        #         printf "      Please ensure fastcgi is enabled if you experience issues\\n"
+        #     fi
+        # fi
     fi
     # For updates and unattended install.
     if [[ "${useUpdateVars}" == true ]]; then
@@ -2634,25 +2608,10 @@ main() {
 
     # Install the Core dependencies
     local dep_install_list=("${PIHOLE_DEPS[@]}")
-    if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
-        # Install the Web dependencies
-        dep_install_list+=("${PIHOLE_WEB_DEPS[@]}")
-    fi
 
     install_dependent_packages "${dep_install_list[@]}"
     unset dep_install_list
 
-    # On some systems, lighttpd is not enabled on first install. We need to enable it here if the user
-    # has chosen to install the web interface, else the `LIGHTTPD_ENABLED` check will fail
-    if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
-        enable_service lighttpd
-    fi
-    # Determine if lighttpd is correctly enabled
-    if check_service_active "lighttpd"; then
-        LIGHTTPD_ENABLED=true
-    else
-        LIGHTTPD_ENABLED=false
-    fi
     # Create the pihole user
     create_pihole_user
 
@@ -2692,17 +2651,6 @@ main() {
     # so this change needs to be made after installation is complete,
     # but before starting or resarting the dnsmasq or ftl services
     disable_resolved_stublistener
-
-    # If the Web server was installed,
-    if [[ "${INSTALL_WEB_SERVER}" == true ]]; then
-
-        if [[ "${LIGHTTPD_ENABLED}" == true ]]; then
-            restart_service lighttpd
-            enable_service lighttpd
-        else
-            printf "  %b Lighttpd is disabled, skipping service restart\\n" "${INFO}"
-        fi
-    fi
 
     printf "  %b Restarting services...\\n" "${INFO}"
     # Start services
