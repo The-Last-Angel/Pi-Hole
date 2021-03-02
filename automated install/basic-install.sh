@@ -1654,59 +1654,6 @@ install_dependent_packages() {
     return 0
 }
 
-# Install the Web interface dashboard
-installPiholeWeb() {
-    # printf "\\n  %b Installing blocking page...\\n" "${INFO}"
-
-    # local str="Creating directory for blocking page, and copying files"
-    # printf "  %b %s..." "${INFO}" "${str}"
-    # # Install the directory
-    # install -d -m 0755 ${PI_HOLE_BLOCKPAGE_DIR}
-    # # and the blockpage
-    # install -D -m 644 ${PI_HOLE_LOCAL_REPO}/advanced/{index,blockingpage}.* ${PI_HOLE_BLOCKPAGE_DIR}/
-
-    # # Remove superseded file
-    # if [[ -e "${PI_HOLE_BLOCKPAGE_DIR}/index.js" ]]; then
-    #     rm "${PI_HOLE_BLOCKPAGE_DIR}/index.js"
-    # fi
-
-    # printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
-
-    # local str="Backing up index.lighttpd.html"
-    # printf "  %b %s..." "${INFO}" "${str}"
-    # # If the default index file exists,
-    # if [[ -f "${webroot}/index.lighttpd.html" ]]; then
-    #     # back it up
-    #     mv ${webroot}/index.lighttpd.html ${webroot}/index.lighttpd.orig
-    #     printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
-    # # Otherwise,
-    # else
-    #     # don't do anything
-    #     printf "%b  %b %s\\n" "${OVER}" "${INFO}" "${str}"
-    #     printf "      No default index.lighttpd.html file found... not backing up\\n"
-    # fi
-
-    # # Install Sudoers file
-    # local str="Installing sudoer file"
-    # printf "\\n  %b %s..." "${INFO}" "${str}"
-    # # Make the .d directory if it doesn't exist
-    # install -d -m 755 /etc/sudoers.d/
-    # # and copy in the pihole sudoers file
-    # install -m 0640 ${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole.sudo /etc/sudoers.d/pihole
-    # # Add lighttpd user (OS dependent) to sudoers file
-    # echo "${LIGHTTPD_USER} ALL=NOPASSWD: ${PI_HOLE_BIN_DIR}/pihole" >> /etc/sudoers.d/pihole
-
-    # # If the Web server user is lighttpd,
-    # if [[ "$LIGHTTPD_USER" == "lighttpd" ]]; then
-    #     # Allow executing pihole via sudo with Fedora
-    #     # Usually /usr/local/bin ${PI_HOLE_BIN_DIR} is not permitted as directory for sudoable programs
-    #     echo "Defaults secure_path = /sbin:/bin:/usr/sbin:/usr/bin:${PI_HOLE_BIN_DIR}" >> /etc/sudoers.d/pihole
-    # fi
-    # # Set the strict permissions on the file
-    # chmod 0440 /etc/sudoers.d/pihole
-    # printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
-}
-
 # Installs a cron file
 installCron() {
     # Install the cron job
@@ -1920,11 +1867,6 @@ installPihole() {
     if ! installConfigs; then
         printf "  %b Failure in dependent config copy function.\\n" "${CROSS}"
         exit 1
-    fi
-    # If the user wants to install the dashboard,
-    if [[ "${INSTALL_WEB_INTERFACE}" == true ]]; then
-        # do so
-        installPiholeWeb
     fi
     # Install the cron file
     installCron
