@@ -1686,25 +1686,25 @@ installPiholeWeb() {
     #     printf "      No default index.lighttpd.html file found... not backing up\\n"
     # fi
 
-    # Install Sudoers file
-    local str="Installing sudoer file"
-    printf "\\n  %b %s..." "${INFO}" "${str}"
-    # Make the .d directory if it doesn't exist
-    install -d -m 755 /etc/sudoers.d/
-    # and copy in the pihole sudoers file
-    install -m 0640 ${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole.sudo /etc/sudoers.d/pihole
-    # Add lighttpd user (OS dependent) to sudoers file
-    echo "${LIGHTTPD_USER} ALL=NOPASSWD: ${PI_HOLE_BIN_DIR}/pihole" >> /etc/sudoers.d/pihole
+    # # Install Sudoers file
+    # local str="Installing sudoer file"
+    # printf "\\n  %b %s..." "${INFO}" "${str}"
+    # # Make the .d directory if it doesn't exist
+    # install -d -m 755 /etc/sudoers.d/
+    # # and copy in the pihole sudoers file
+    # install -m 0640 ${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole.sudo /etc/sudoers.d/pihole
+    # # Add lighttpd user (OS dependent) to sudoers file
+    # echo "${LIGHTTPD_USER} ALL=NOPASSWD: ${PI_HOLE_BIN_DIR}/pihole" >> /etc/sudoers.d/pihole
 
-    # If the Web server user is lighttpd,
-    if [[ "$LIGHTTPD_USER" == "lighttpd" ]]; then
-        # Allow executing pihole via sudo with Fedora
-        # Usually /usr/local/bin ${PI_HOLE_BIN_DIR} is not permitted as directory for sudoable programs
-        echo "Defaults secure_path = /sbin:/bin:/usr/sbin:/usr/bin:${PI_HOLE_BIN_DIR}" >> /etc/sudoers.d/pihole
-    fi
-    # Set the strict permissions on the file
-    chmod 0440 /etc/sudoers.d/pihole
-    printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
+    # # If the Web server user is lighttpd,
+    # if [[ "$LIGHTTPD_USER" == "lighttpd" ]]; then
+    #     # Allow executing pihole via sudo with Fedora
+    #     # Usually /usr/local/bin ${PI_HOLE_BIN_DIR} is not permitted as directory for sudoable programs
+    #     echo "Defaults secure_path = /sbin:/bin:/usr/sbin:/usr/bin:${PI_HOLE_BIN_DIR}" >> /etc/sudoers.d/pihole
+    # fi
+    # # Set the strict permissions on the file
+    # chmod 0440 /etc/sudoers.d/pihole
+    # printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
 }
 
 # Installs a cron file
