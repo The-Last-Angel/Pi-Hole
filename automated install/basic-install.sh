@@ -279,7 +279,7 @@ if is_command apt-get ; then
     # An array for something...
     PKG_INSTALL=("${PKG_MANAGER}" -qq --no-install-recommends install)
     # grep -c will return 1 retVal on 0 matches, block this throwing the set -e with an OR TRUE
-    PKG_COUNT="${PKG_MANAGER} -s -o Debug::NoLocking=true upgrade | grep -c ^Inst || true"   
+    PKG_COUNT="${PKG_MANAGER} -s -o Debug::NoLocking=true upgrade | grep -c ^Inst || true"
     # Update package cache. This is required already here to assure apt-cache calls have package lists available.
     update_package_cache || exit 1
     # Debian 7 doesn't have iproute2 so check if it's available first
@@ -299,6 +299,16 @@ if is_command apt-get ; then
     INSTALLER_DEPS=(git "${iproute_pkg}" whiptail dnsutils)
     # Pi-hole itself has several dependencies that also need to be installed
     PIHOLE_DEPS=(cron curl iputils-ping lsof netcat psmisc sudo unzip wget idn2 sqlite3 libcap2-bin dns-root-data libcap2)
+<<<<<<< HEAD
+=======
+
+    # # The Web server user,
+    # LIGHTTPD_USER="www-data"
+    # # group,
+    # LIGHTTPD_GROUP="www-data"
+    # # and config file
+    # LIGHTTPD_CFG="lighttpd.conf.debian"
+>>>>>>> Start of something brave. Remove PHP version checking etc from install script
 
     # A function to check...
     test_dpkg_lock() {
@@ -709,7 +719,7 @@ use4andor6() {
     if [[ "${useIPv4}" ]]; then
         # Run our function to get the information we need
         find_IPv4_information
-        if [[ -f "/etc/dhcpcd.conf" ]]; then	
+        if [[ -f "/etc/dhcpcd.conf" ]]; then
             # configure networking via dhcpcd
             getStaticIPv4Settings
             setDHCPCD
