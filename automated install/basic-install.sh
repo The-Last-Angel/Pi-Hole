@@ -565,9 +565,9 @@ welcomeDialogs() {
     whiptail --msgbox --backtitle "Plea" --title "Free and open source" "\\n\\nThe Pi-hole is free, but powered by your donations:  https://pi-hole.net/donate/" "${r}" "${c}"
 
     # Explain the need for a static address
-    whiptail --msgbox --backtitle "Initiating network interface" --title "Static IP Needed" "\\n\\nThe Pi-hole is a SERVER so it needs a STATIC IP ADDRESS to function properly.
+    whiptail --msgbox --backtitle "Network Warning" --title "Static IP Needed" "\\n\\nThe Pi-hole is a SERVER so it NEEDS a STATIC IP ADDRESS to function properly.
 
-In the next section, you can choose to use your current network settings (DHCP) or to manually edit them." "${r}" "${c}"
+Please ensure you set this after install if you have not already done so." "${r}" "${c}"
 }
 
 # A function that let's the user pick an interface to use with Pi-hole
@@ -721,6 +721,7 @@ use4andor6() {
         find_IPv4_information
         if [[ -f "/etc/dhcpcd.conf" ]]; then
             # configure networking via dhcpcd
+            # This function will _only_ be hit if dhcpcd5 is already installed (a la Raspbian)
             getStaticIPv4Settings
             setDHCPCD
         fi
