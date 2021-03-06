@@ -721,9 +721,12 @@ use4andor6() {
         find_IPv4_information
         if [[ -f "/etc/dhcpcd.conf" ]]; then
             # configure networking via dhcpcd
-            # This function will _only_ be hit if dhcpcd5 is already installed (a la Raspbian)
-            getStaticIPv4Settings
-            setDHCPCD
+            if whiptail --backtitle "static?" --title "Existing dhcpcd installation detected" --yesno "TODO: Decide on wording, basically ask user if they want us to configure IP on raspbian or not. Maybe even use the OS detection from above so that we don't display this message on anything _but_ raspbian"; then
+                getStaticIPv4Settings
+                setDHCPCD
+            else
+                printf "  %b Static IP address NOT set during installation. Please ensure you set this manually.\\n" "${INFO}"
+            fi
         fi
     fi
     # If IPv6 is to be used,
