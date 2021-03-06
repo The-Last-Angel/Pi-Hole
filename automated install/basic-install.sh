@@ -721,7 +721,7 @@ use4andor6() {
         find_IPv4_information
         if [[ -f "/etc/dhcpcd.conf" ]]; then
             # configure networking via dhcpcd
-            if whiptail --backtitle "static?" --title "Existing dhcpcd installation detected" --yesno "TODO: Decide on wording, basically ask user if they want us to configure IP on raspbian or not. Maybe even use the OS detection from above so that we don't display this message on anything _but_ raspbian"; then
+            if whiptail --backtitle "static?" --title "Existing dhcpcd installation detected" --yesno "TODO: Decide on wording, basically ask user if they want us to configure IP on raspbian or not. Maybe even use the OS detection from above so that we don't display this message on anything _but_ raspbian" "${r}" "${c}"; then
                 getStaticIPv4Settings
                 setDHCPCD
             else
