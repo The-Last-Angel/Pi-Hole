@@ -1032,7 +1032,7 @@ parse_file() {
     local file_lines
     # For each line in the file,
     for file_lines in "${file_info[@]}"; do
-        if [[ ! -z "${file_lines}" ]]; then
+        if [[ -n "${file_lines}" ]]; then
             # don't include the Web password hash
             [[ "${file_lines}" =~ ^\#.*$  || ! "${file_lines}" || "${file_lines}" == "WEBPASSWORD="* ]] && continue
             # otherwise, display the lines of the file
@@ -1281,39 +1281,32 @@ analyze_gravity_list() {
     IFS="$OLD_IFS"
 }
 
-analyze_pihole_log() {
-    echo_current_diagnostic "Pi-hole log"
-    local head_line
-    # Put the current Internal Field Separator into another variable so it can be restored later
-    OLD_IFS="$IFS"
-    # Get the lines that are in the file(s) and store them in an array for parsing later
-    IFS=$'\r\n'
-    local pihole_log_permissions
-    pihole_log_permissions=$(ls -ld "${PIHOLE_LOG}")
-    log_write "${COL_GREEN}${pihole_log_permissions}${COL_NC}"
-    local pihole_log_head=()
-    mapfile -t pihole_log_head < <(head -n 20 ${PIHOLE_LOG})
-    log_write "   ${COL_CYAN}-----head of $(basename ${PIHOLE_LOG})------${COL_NC}"
+print_pihole_log()
+{
+    local log_line
     local error_to_check_for
     local line_to_obfuscate
     local obfuscated_line
-    for head_line in "${pihole_log_head[@]}"; do
+    local pihole_log_lines=()
+    mapfile -t pihole_log_lines < <("${1}" -n "${2}" ${PIHOLE_LOG})
+    log_write "   ${COL_CYAN}-----${1} of $(basename ${PIHOLE_LOG})------${COL_NC}"
+    for log_line in "${pihole_log_lines[@]}"; do
         # A common error in the pihole.log is when there is a non-hosts formatted file
         # that the DNS server is attempting to read.  Since it's not formatted
         # correctly, there will be an entry for "bad address at line n"
         # So we can check for that here and highlight it in red so the user can see it easily
-        error_to_check_for=$(echo "${head_line}" | grep 'bad address at')
+        error_to_check_for=$(echo "${log_line}" | grep 'bad address at')
         # Some users may not want to have the domains they visit sent to us
         # To that end, we check for lines in the log that would contain a domain name
-        line_to_obfuscate=$(echo "${head_line}" | grep ': query\|: forwarded\|: reply')
+        line_to_obfuscate=$(echo "${log_line}" | grep ': query\|: forwarded\|: reply')
         # If the variable contains a value, it found an error in the log
         if [[ -n ${error_to_check_for} ]]; then
             # So we can print it in red to make it visible to the user
-            log_write "   ${CROSS} ${COL_RED}${head_line}${COL_NC} (${FAQ_BAD_ADDRESS})"
+            log_write "   ${CROSS} ${COL_RED}${log_line}${COL_NC} (${FAQ_BAD_ADDRESS})"
         else
             # If the variable does not a value (the current default behavior), so do not obfuscate anything
             if [[ -z ${OBFUSCATE} ]]; then
-                log_write "   ${head_line}"
+                log_write "   ${log_line}"
             # Othwerise, a flag was passed to this command to obfuscate domains in the log
             else
                 # So first check if there are domains in the log that should be obfuscated
@@ -1323,11 +1316,24 @@ analyze_pihole_log() {
                     obfuscated_line=$(echo "${line_to_obfuscate}" | awk -v placeholder="${OBFUSCATED_PLACEHOLDER}" '{sub($6,placeholder); print $0}')
                     log_write "   ${obfuscated_line}"
                 else
-                    log_write "   ${head_line}"
+                    log_write "   ${log_line}"
                 fi
             fi
         fi
     done
+}
+
+analyze_pihole_log() {
+    echo_current_diagnostic "Pi-hole log"
+    # Put the current Internal Field Separator into another variable so it can be restored later
+    OLD_IFS="$IFS"
+    # Get the lines that are in the file(s) and store them in an array for parsing later
+    IFS=$'\r\n'
+    local pihole_log_permissions
+    pihole_log_permissions=$(ls -ld "${PIHOLE_LOG}")
+    log_write "${COL_GREEN}${pihole_log_permissions}${COL_NC}"
+    print_pihole_log "head" 40
+    print_pihole_log "tail" 40
     log_write ""
     # Set the IFS back to what it was
     IFS="$OLD_IFS"
