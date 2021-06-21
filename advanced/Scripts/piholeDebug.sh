@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pi-hole: A black hole for Internet advertisements
-# (c) 2017 Pi-hole, LLC (https://pi-hole.net)
+# (c) 2021 Pi-hole (https://pi-hole.net)
 # Network-wide ad blocking via your own hardware.
 #
 # Generates pihole_debug.log to be used for troubleshooting.
@@ -196,6 +196,33 @@ NOTE: All log files auto-delete after 48 hours and ONLY the Pi-hole developers c
 
 show_disclaimer(){
     log_write "${DISCLAIMER}"
+}
+
+check_for_ftl(){
+    echo_current_diagnostic "Checking for pihole-FTL binary"
+
+    declare -g FTL_PATH
+    read -r FTL_PATH < <(which pihole-FTL)
+    if [ -z "${FTL_PATH}" ]; then
+        log_write "${CROSS} ${COL_RED} Unable to find pihole-FTL binary.${COL_NC}"
+        # Non-zero return value
+        return 2
+    else
+        log_write "${TICK} pihole-FTL: ${COL_GREEN}${FTL_PATH}${COL_NC}"
+    fi
+
+}
+
+check_for_lua(){
+    echo_current_diagnostic "Checking for lua capabilities"
+
+    if ! (${FTL_PATH} lua -v &>/dev/null); then
+        log_write "${CROSS} ${COL_RED} pihole-FTL binary does not have lua capabilites.${COL_NC}"
+        # Non-zero return value
+        return
+    else
+        log_write "${TICK} pihole-FTL: ${COL_GREEN}lua found!${COL_NC}"
+    fi
 }
 
 source_setup_variables() {
@@ -1421,28 +1448,40 @@ make_temporary_log
 initialize_debug
 # setupVars.conf needs to be sourced before the networking so the values are
 # available to the other functions
-source_setup_variables
-check_component_versions
-check_critical_program_versions
-diagnose_operating_system
-check_selinux
-check_firewalld
-processor_check
-check_networking
-check_name_resolution
-check_dhcp_servers
-process_status
-ftl_full_status
-parse_setup_vars
-check_x_headers
-analyze_gravity_list
-show_groups
-show_domainlist
-show_clients
-show_adlists
-show_content_of_pihole_files
-show_messages
-parse_locale
-analyze_pihole_log
-copy_to_debug_log
-upload_to_tricorder
+if ! check_for_ftl; then
+    log_write "${COL_RED}Unable to complete debug run. Please contact support for assistance."
+    log_write "Please note the error that is displayed above.${COL_NC}"
+    #Non-zero return value
+    exit 2
+fi
+if ! check_for_lua; then
+    log_write "${COL_RED}Unable to complete debug run. Please contact support for assistance."
+    log_write "Please note the error that is displayed above.${COL_NC}"
+    #Non-zero return value
+    exit 2
+fi
+# source_setup_variables
+# check_component_versions
+# check_critical_program_versions
+# diagnose_operating_system
+# check_selinux
+# check_firewalld
+# processor_check
+# check_networking
+# check_name_resolution
+# check_dhcp_servers
+# process_status
+# ftl_full_status
+# parse_setup_vars
+# check_x_headers
+# analyze_gravity_list
+# show_groups
+# show_domainlist
+# show_clients
+# show_adlists
+# show_content_of_pihole_files
+# show_messages
+# parse_locale
+# analyze_pihole_log
+# copy_to_debug_log
+# upload_to_tricorder
